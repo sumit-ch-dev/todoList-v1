@@ -7,6 +7,8 @@ const express = require("express");
 // Require body-parser
 const bodyParser = require("body-parser");
 
+const date = require(__dirname + "/date.js");
+
 
 // Create express server
 
@@ -15,6 +17,7 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(bodyParser.json());
+app.use(express.static("public"));
 
 // set view engine
 app.set("view engine", "ejs");
@@ -23,24 +26,41 @@ app.set("view engine", "ejs");
 
 let PORT = process.env.PORT || 3000;
 
+let items = []
+let workItems = []
 //get request
 app.get("/", function(req, res) {
-    let day = new Date();
-    let currentDay = day.getDay();
-    let today = "";
-    //create an array of days
-    let days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    //loop through array and compare to current day
-    for(let i = 0; i < days.length; i++) {
-        if(currentDay === i) {
-            today = days[i];
-        }
-    }
+    
+    let day = date();
 
-    // pass today variable to ejs file
-    res.render("list", {kindOfDay: today});
-
+    res.render("list", {listTitle: day, newListItem: items});
 })
+
+//handle post request from form
+app.post("/", function(req, res) {
+    if(req.body.list === "Work") {
+        workItems.push(req.body.newItem);
+        res.redirect("/work");
+    } else {
+        items.push(req.body.newItem);
+    }
+    res.redirect("/");
+})
+
+app.get("/work", function(req, res) {
+    res.render("list", {listTitle: "Work List", newListItem: workItems});
+})
+
+app.post("/work", function(req, res) {
+    let item = req.body.newItem;
+    workItems.push(item);
+    res.redirect("/work");
+})
+
+app.get("/about", function(req, res) {
+    res.render("about");
+})  
+
 
 // Listener
 
